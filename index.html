@@ -2,114 +2,161 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no"
+  />
   <meta
     name="description"
-    content="Flappy Bird mobile-first cho web, có chèn ảnh mặt vào chim, âm thanh khi vượt ống và hiện video khi về đích."
+    content="Flappy Bird mobile-first với màn setup riêng, ảnh mặt, video về đích, chướng ngại hình bãi shit và hiệu ứng pháo hoa."
   />
-  <title>Flappy Bird Face Party</title>
-  <link rel="preconnect" href="https://interactive-examples.mdn.mozilla.net" />
+  <title>Flappy Bird Đại Né Cức</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <main class="app-shell">
-    <section class="hero-card">
-      <div class="hero-copy">
-        <p class="eyebrow">Mobile first mini game</p>
-        <h1>Flappy Bird mặt bạn</h1>
-        <p class="hero-text">
-          Tải ảnh khuôn mặt lên, chạm để bay qua ống và cán mốc để mở video ăn mừng.
-        </p>
-      </div>
+    <section id="setupScreen" class="screen active">
+      <div class="screen-card hero-card">
+        <div class="hero-copy">
+          <p class="eyebrow">Màn 1 · Setup</p>
+          <h1>Flappy Bird Đại Né Cức</h1>
+          <p class="hero-text">
+            Chọn ảnh mặt, video về đích và số điểm mục tiêu trước. Xong rồi mới chuyển sang màn chơi.
+          </p>
+        </div>
 
-      <div class="controls-panel">
-        <label class="upload-control" for="faceUpload">
-          <span>Chèn ảnh mặt vào chim</span>
-          <input id="faceUpload" type="file" accept="image/*" capture="user" />
-        </label>
+        <div class="setup-grid">
+          <label class="upload-control" for="faceUpload">
+            <span>Ảnh mặt của Đại</span>
+            <input id="faceUpload" type="file" accept="image/*" capture="user" />
+          </label>
 
-        <label class="upload-control" for="videoUpload">
-          <span>Chọn video khi về đích</span>
-          <input id="videoUpload" type="file" accept="video/*" />
-        </label>
+          <label class="upload-control" for="videoUpload">
+            <span>Video khi thắng</span>
+            <input id="videoUpload" type="file" accept="video/*" />
+          </label>
 
-        <div class="target-control">
-          <label for="goalScore">Điểm về đích</label>
-          <input id="goalScore" type="range" min="3" max="20" step="1" value="8" />
-          <strong id="goalScoreValue">8</strong>
+          <div class="target-control">
+            <label for="goalScore">Điểm về đích</label>
+            <input id="goalScore" type="range" min="3" max="20" step="1" value="8" />
+            <strong id="goalScoreValue">8</strong>
+          </div>
+
+          <div class="preview-card">
+            <p class="preview-label">Xem trước mặt</p>
+            <img id="setupFacePreview" class="setup-face-preview" alt="Ảnh mặt xem trước" />
+            <p id="videoStatus" class="subtle-text">Chưa chọn video chiến thắng.</p>
+          </div>
         </div>
 
         <div class="button-row">
-          <button id="startButton" class="primary-button" type="button">Bắt đầu</button>
-          <button id="restartButton" class="ghost-button" type="button">Chơi lại</button>
+          <button id="goToGameButton" class="primary-button tap-target" type="button">
+            Sang màn chơi
+          </button>
         </div>
       </div>
     </section>
 
-    <section class="game-card">
-      <div class="hud">
-        <div class="hud-chip">
-          <span>Điểm</span>
-          <strong id="scoreValue">0</strong>
+    <section id="playScreen" class="screen">
+      <div class="screen-card play-shell">
+        <div class="play-topbar">
+          <div>
+            <p class="eyebrow">Màn 2 · Chơi game</p>
+            <h2>Ấn bắt đầu rồi né hết bãi shit</h2>
+          </div>
+          <button id="backToSetupButton" class="ghost-button tap-target" type="button">
+            Quay lại setup
+          </button>
         </div>
-        <div class="hud-chip">
-          <span>Mục tiêu</span>
-          <strong id="goalValue">8</strong>
-        </div>
-        <div class="hud-chip status-chip">
-          <span>Trạng thái</span>
-          <strong id="statusText">Sẵn sàng</strong>
-        </div>
-      </div>
 
-      <div class="game-frame">
-        <canvas
-          id="gameCanvas"
-          width="420"
-          height="740"
-          aria-label="Flappy Bird game area"
-        ></canvas>
-
-        <div id="gameOverlay" class="game-overlay">
-          <div class="overlay-card">
-            <p class="overlay-kicker">Chạm màn hình để chơi</p>
-            <h2 id="gameOverlayTitle">Flappy Bird đã sẵn sàng</h2>
-            <p id="gameOverlayBody">
-              Chạm vào vùng game hoặc nút Bay để giữ chim trên không. Khi đủ điểm, video sẽ hiện ra.
-            </p>
+        <div class="hud">
+          <div class="hud-chip">
+            <span>Điểm</span>
+            <strong id="scoreValue">0</strong>
+          </div>
+          <div class="hud-chip">
+            <span>Mục tiêu</span>
+            <strong id="goalValue">8</strong>
+          </div>
+          <div class="hud-chip status-chip">
+            <span>Trạng thái</span>
+            <strong id="statusText">Sẵn sàng</strong>
           </div>
         </div>
 
-        <div id="finishOverlay" class="finish-overlay hidden">
-          <div class="finish-card">
-            <p class="overlay-kicker">Ve dich thanh cong</p>
-            <h2>Chuc mung, ban da qua cua!</h2>
-            <p id="finishMessage">Ban vua dat muc tieu.</p>
-            <video
-              id="finishVideo"
-              class="finish-video"
-              controls
-              playsinline
-              preload="metadata"
-              poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23141926'/%3E%3Ctext x='50%25' y='50%25' fill='%23f4d35e' font-size='32' dominant-baseline='middle' text-anchor='middle'%3EChuc mung!%3C/text%3E%3C/svg%3E"
-            >
-              <source
-                src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
-                type="video/mp4"
-              />
-              Trinh duyet cua ban khong ho tro video HTML5.
-            </video>
-            <div class="button-row finish-actions">
-              <button id="playAgainButton" class="primary-button" type="button">Choi tiep</button>
-              <button id="closeVideoButton" class="ghost-button" type="button">Dong video</button>
+        <div class="summary-row">
+          <div class="summary-chip">
+            <span>Ảnh mặt</span>
+            <strong id="faceSummary">Đã có ảnh mặc định</strong>
+          </div>
+          <div class="summary-chip">
+            <span>Video</span>
+            <strong id="videoSummary">Chưa có video</strong>
+          </div>
+        </div>
+
+        <div class="game-card">
+          <div class="game-frame tap-target">
+            <canvas
+              id="gameCanvas"
+              width="420"
+              height="740"
+              aria-label="Flappy Bird game area"
+            ></canvas>
+            <canvas
+              id="fireworksCanvas"
+              class="fireworks-canvas"
+              width="420"
+              height="740"
+              aria-hidden="true"
+            ></canvas>
+
+            <div id="gameOverlay" class="game-overlay">
+              <div class="overlay-card">
+                <p class="overlay-kicker">Sẵn sàng vào trận</p>
+                <h2 id="gameOverlayTitle">Bắt đầu để bảo vệ Đại</h2>
+                <p id="gameOverlayBody">
+                  Chạm vào vùng game hoặc nút Bay để bắt đầu. Mỗi lần lách qua một bãi shit sẽ có tiếng
+                  "Đại ngu".
+                </p>
+                <div class="button-row">
+                  <button id="startRoundButton" class="primary-button tap-target" type="button">
+                    Bắt đầu
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="resultOverlay" class="result-overlay hidden">
+              <div class="result-card">
+                <p id="resultKicker" class="overlay-kicker">Kết quả</p>
+                <h2 id="resultTitle">Đại đã ăn cức ngập mồm</h2>
+                <p id="resultMessage">Lỡ đâm phải bãi shit rồi.</p>
+                <img id="resultFace" class="result-face hidden" alt="Ảnh mặt của Đại" />
+                <video
+                  id="finishVideo"
+                  class="finish-video hidden"
+                  controls
+                  playsinline
+                  preload="metadata"
+                ></video>
+                <div class="button-row finish-actions">
+                  <button id="resultBackButton" class="ghost-button tap-target" type="button">
+                    Quay lại
+                  </button>
+                  <button id="resultActionButton" class="primary-button tap-target" type="button">
+                    Cho đại ăn cức lại
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div class="touch-hints">
-        <button id="flapButton" class="fab-button" type="button">Bay</button>
-        <p>Meo: cham vao vung game o bat ky dau de flap.</p>
+          <div class="touch-hints">
+            <button id="flapButton" class="fab-button tap-target" type="button">Bay</button>
+            <p>Chạm nhanh trong khung game hoặc nút Bay để flap. Đã chặn bớt double-tap zoom trên mobile.</p>
+          </div>
+        </div>
       </div>
     </section>
   </main>
