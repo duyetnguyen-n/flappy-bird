@@ -23,11 +23,13 @@ const statusText = document.getElementById("statusText");
 const faceSummary = document.getElementById("faceSummary");
 const videoSummary = document.getElementById("videoSummary");
 const videoStatus = document.getElementById("videoStatus");
+const soundStatus = document.getElementById("soundStatus");
 const setupFacePreview = document.getElementById("setupFacePreview");
 
 const goalScoreInput = document.getElementById("goalScore");
 const faceUpload = document.getElementById("faceUpload");
 const videoUpload = document.getElementById("videoUpload");
+const soundUpload = document.getElementById("soundUpload");
 
 const goToGameButton = document.getElementById("goToGameButton");
 const backToSetupButton = document.getElementById("backToSetupButton");
@@ -39,13 +41,14 @@ const resultActionButton = document.getElementById("resultActionButton");
 const GAME_WIDTH = 420;
 const GAME_HEIGHT = 740;
 const POOP_WIDTH = 88;
-const POOP_GAP = 176;
-const POOP_SPEED = 2.95;
-const GRAVITY = 0.34;
-const FLAP_FORCE = -6.15;
-const POOP_INTERVAL = 1340;
+const POOP_GAP = 220;
+const POOP_SPEED = 2.2;
+const GRAVITY = 0.285;
+const FLAP_FORCE = -6.1;
+const POOP_INTERVAL = 1680;
 const GROUND_HEIGHT = 90;
 const FIREWORK_DURATION = 5200;
+const FLAP_INPUT_DEBOUNCE = 44;
 
 const DEFAULT_FACE_PREVIEW =
   "data:image/svg+xml;utf8," +
@@ -81,14 +84,21 @@ const game = {
   goal: Number(goalScoreInput.value),
   audioContext: null,
   uploadedVideoUrl: null,
+  uploadedSoundUrl: null,
+  uploadedSoundBuffer: null,
   finishVideoUrl: "",
   faceImage: null,
   facePreviewUrl: DEFAULT_FACE_PREVIEW,
+  availableVoices: [],
+  speechPrimed: false,
+  lastSpeechAt: 0,
+  lastInputAt: 0,
   bird: {
     x: 118,
     y: GAME_HEIGHT * 0.42,
     velocity: 0,
     radius: 28,
+    hitRadius: 21,
     rotation: 0,
   },
   obstacles: [],
@@ -130,12 +140,15 @@ function updateSummaries() {
   videoStatus.textContent = game.finishVideoUrl
     ? "Video chiến thắng đã sẵn sàng."
     : "Chưa chọn video chiến thắng.";
+  soundStatus.textContent = game.uploadedSoundBuffer
+    ? 'Đã nạp file tiếng "Đại ngu".'
+    : 'Đang dùng âm mặc định + thử đọc "Đại ngu".';
 }
 
 function prepareIdleOverlay() {
   gameOverlayTitle.textContent = "Bắt đầu để bảo vệ Đại";
   gameOverlayBody.textContent =
-    'Chạm vào vùng game hoặc nút Bay để bắt đầu. Mỗi lần lách qua một bãi shit sẽ có tiếng "Đại ngu".';
+    'Chạm ở bất kỳ đâu trong khung game hoặc nút Bay để bắt đầu. Mỗi lần lách qua một bãi sẽ phát tiếng.';
   gameOverlay.classList.remove("hidden");
 }
 
@@ -194,6 +207,7 @@ function startGame() {
   }
 
   initAudio();
+  primeSpeech();
   game.running = true;
   game.ended = false;
   gameOverlay.classList.add("hidden");
@@ -210,11 +224,18 @@ function flap() {
     return;
   }
 
+  const now = performance.now();
+  if (now - game.lastInputAt < FLAP_INPUT_DEBOUNCE) {
+    return;
+  }
+  game.lastInputAt = now;
+
   if (!game.running) {
     startGame();
   }
 
   initAudio();
+  primeSpeech();
   game.bird.velocity = FLAP_FORCE;
   game.bird.rotation = -0.48;
 }
@@ -306,17 +327,17 @@ function updateObstacles(factor) {
 
 function hasHitBounds() {
   return (
-    game.bird.y + game.bird.radius >= GAME_HEIGHT - GROUND_HEIGHT ||
-    game.bird.y - game.bird.radius <= 0
+    game.bird.y + game.bird.hitRadius >= GAME_HEIGHT - GROUND_HEIGHT ||
+    game.bird.y - game.bird.hitRadius <= 0
   );
 }
 
 function hasHitObstacle() {
   return game.obstacles.some((obstacle) => {
-    const birdLeft = game.bird.x - game.bird.radius;
-    const birdRight = game.bird.x + game.bird.radius;
-    const birdTop = game.bird.y - game.bird.radius;
-    const birdBottom = game.bird.y + game.bird.radius;
+    const birdLeft = game.bird.x - game.bird.hitRadius;
+    const birdRight = game.bird.x + game.bird.hitRadius;
+    const birdTop = game.bird.y - game.bird.hitRadius;
+    const birdBottom = game.bird.y + game.bird.hitRadius;
     const gapTop = obstacle.gapY;
     const gapBottom = obstacle.gapY + POOP_GAP;
     const withinX = birdRight > obstacle.x && birdLeft < obstacle.x + POOP_WIDTH;
@@ -406,11 +427,43 @@ function initAudio() {
   }
 }
 
-function playPassSound() {
-  const spoke = speakPhrase("Đại ngu");
-  if (!spoke) {
-    playPassTone();
+function primeSpeech() {
+  if (
+    game.speechPrimed ||
+    !("speechSynthesis" in window) ||
+    typeof SpeechSynthesisUtterance === "undefined"
+  ) {
+    return;
   }
+
+  try {
+    cacheVoices();
+    const unlockUtterance = new SpeechSynthesisUtterance(" ");
+    unlockUtterance.volume = 0.01;
+    unlockUtterance.rate = 1;
+    unlockUtterance.lang = "vi-VN";
+    window.speechSynthesis.speak(unlockUtterance);
+    game.speechPrimed = true;
+  } catch (_) {
+    game.speechPrimed = false;
+  }
+}
+
+function cacheVoices() {
+  if (!("speechSynthesis" in window)) {
+    return;
+  }
+
+  game.availableVoices = window.speechSynthesis.getVoices();
+}
+
+function playPassSound() {
+  if (playUploadedPassSound()) {
+    return;
+  }
+
+  playPassTone();
+  speakPhrase("Đại ngu");
 }
 
 function speakPhrase(text) {
@@ -418,19 +471,47 @@ function speakPhrase(text) {
     return false;
   }
 
+  const now = performance.now();
+  if (now - game.lastSpeechAt < 550) {
+    return false;
+  }
+  game.lastSpeechAt = now;
+
+  cacheVoices();
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "vi-VN";
-  utterance.rate = 0.95;
-  utterance.pitch = 0.92;
+  utterance.rate = 0.9;
+  utterance.pitch = 0.88;
+  utterance.volume = 1;
 
-  const voices = window.speechSynthesis.getVoices();
-  const vietnameseVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith("vi"));
+  const vietnameseVoice = game.availableVoices.find((voice) =>
+    voice.lang.toLowerCase().startsWith("vi")
+  );
   if (vietnameseVoice) {
     utterance.voice = vietnameseVoice;
   }
 
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
+  try {
+    window.speechSynthesis.speak(utterance);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function playUploadedPassSound() {
+  if (!game.audioContext || !game.uploadedSoundBuffer) {
+    return false;
+  }
+
+  const source = game.audioContext.createBufferSource();
+  const gain = game.audioContext.createGain();
+  source.buffer = game.uploadedSoundBuffer;
+  gain.gain.value = 0.95;
+  source.connect(gain);
+  gain.connect(game.audioContext.destination);
+  source.start();
   return true;
 }
 
@@ -440,21 +521,28 @@ function playPassTone() {
   }
 
   const now = game.audioContext.currentTime;
-  const osc = game.audioContext.createOscillator();
-  const gain = game.audioContext.createGain();
 
-  osc.type = "triangle";
-  osc.frequency.setValueAtTime(540, now);
-  osc.frequency.exponentialRampToValueAtTime(780, now + 0.12);
+  [
+    { start: 0, from: 560, to: 760, duration: 0.17 },
+    { start: 0.19, from: 520, to: 680, duration: 0.14 },
+  ].forEach((note) => {
+    const osc = game.audioContext.createOscillator();
+    const gain = game.audioContext.createGain();
+    const start = now + note.start;
 
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(note.from, start);
+    osc.frequency.exponentialRampToValueAtTime(note.to, start + note.duration);
 
-  osc.connect(gain);
-  gain.connect(game.audioContext.destination);
-  osc.start(now);
-  osc.stop(now + 0.2);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.12, start + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration);
+
+    osc.connect(gain);
+    gain.connect(game.audioContext.destination);
+    osc.start(start);
+    osc.stop(start + note.duration + 0.02);
+  });
 }
 
 function playCrashSound() {
@@ -850,6 +938,34 @@ function handleVideoUpload(event) {
   statusText.textContent = "Đã nạp video chiến thắng";
 }
 
+function handleSoundUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) {
+    return;
+  }
+
+  initAudio();
+
+  if (game.uploadedSoundUrl) {
+    URL.revokeObjectURL(game.uploadedSoundUrl);
+  }
+
+  game.uploadedSoundUrl = URL.createObjectURL(file);
+  file
+    .arrayBuffer()
+    .then((buffer) => game.audioContext.decodeAudioData(buffer.slice(0)))
+    .then((decodedBuffer) => {
+      game.uploadedSoundBuffer = decodedBuffer;
+      updateSummaries();
+      statusText.textContent = 'Đã nạp file tiếng "Đại ngu"';
+    })
+    .catch(() => {
+      game.uploadedSoundBuffer = null;
+      updateSummaries();
+      statusText.textContent = "File tiếng chưa đọc được, đang quay về âm mặc định";
+    });
+}
+
 function preventDoubleTapZoom() {
   let lastTouchEnd = 0;
 
@@ -891,8 +1007,23 @@ function preventDoubleTapZoom() {
   );
 }
 
+function handleGameTap(event) {
+  if (event.target.closest("button, video")) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  if (!resultOverlay.classList.contains("hidden")) {
+    return;
+  }
+  flap();
+}
+
 function bindEvents() {
   goToGameButton.addEventListener("click", () => {
+    initAudio();
+    primeSpeech();
     setScreen("play");
     resetRunState();
   });
@@ -920,24 +1051,17 @@ function bindEvents() {
 
   faceUpload.addEventListener("change", handleFaceUpload);
   videoUpload.addEventListener("change", handleVideoUpload);
+  soundUpload.addEventListener("change", handleSoundUpload);
 
-  canvas.addEventListener("pointerdown", (event) => {
+  canvas.addEventListener("touchstart", handleGameTap, { passive: false });
+  canvas.addEventListener("pointerdown", handleGameTap);
+  gameFrame.addEventListener("touchstart", handleGameTap, { passive: false });
+  gameFrame.addEventListener("pointerdown", handleGameTap);
+  flapButton.addEventListener("touchstart", (event) => {
     event.preventDefault();
     event.stopPropagation();
     flap();
-  });
-
-  gameFrame.addEventListener("pointerdown", (event) => {
-    if (event.target.closest("button, video")) {
-      return;
-    }
-
-    event.preventDefault();
-    if (!resultOverlay.classList.contains("hidden")) {
-      return;
-    }
-    flap();
-  });
+  }, { passive: false });
 
   window.addEventListener("keydown", (event) => {
     if (game.screen !== "play") {
@@ -958,7 +1082,15 @@ function bindEvents() {
     if (game.uploadedVideoUrl) {
       URL.revokeObjectURL(game.uploadedVideoUrl);
     }
+    if (game.uploadedSoundUrl) {
+      URL.revokeObjectURL(game.uploadedSoundUrl);
+    }
   });
+
+  if ("speechSynthesis" in window) {
+    cacheVoices();
+    window.speechSynthesis.addEventListener?.("voiceschanged", cacheVoices);
+  }
 
   preventDoubleTapZoom();
 }

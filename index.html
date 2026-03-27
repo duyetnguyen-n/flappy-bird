@@ -27,13 +27,18 @@
 
         <div class="setup-grid">
           <label class="upload-control" for="faceUpload">
-            <span>Ảnh mặt của Đại</span>
-            <input id="faceUpload" type="file" accept="image/*" capture="user" />
+            <span>Ảnh mặt của Đại từ thư viện</span>
+            <input id="faceUpload" type="file" accept="image/*" />
           </label>
 
           <label class="upload-control" for="videoUpload">
-            <span>Video khi thắng</span>
+            <span>Video khi thắng từ thư viện</span>
             <input id="videoUpload" type="file" accept="video/*" />
+          </label>
+
+          <label class="upload-control" for="soundUpload">
+            <span>Tiếng "Đại ngu" cho iPhone</span>
+            <input id="soundUpload" type="file" accept="audio/*" />
           </label>
 
           <div class="target-control">
@@ -45,7 +50,10 @@
           <div class="preview-card">
             <p class="preview-label">Xem trước mặt</p>
             <img id="setupFacePreview" class="setup-face-preview" alt="Ảnh mặt xem trước" />
-            <p id="videoStatus" class="subtle-text">Chưa chọn video chiến thắng.</p>
+            <div class="preview-meta">
+              <p id="videoStatus" class="subtle-text">Chưa chọn video chiến thắng.</p>
+              <p id="soundStatus" class="subtle-text">Đang dùng âm mặc định + thử đọc "Đại ngu".</p>
+            </div>
           </div>
         </div>
 
@@ -59,44 +67,19 @@
 
     <section id="playScreen" class="screen">
       <div class="screen-card play-shell">
-        <div class="play-topbar">
-          <div>
-            <p class="eyebrow">Màn 2 · Chơi game</p>
-            <h2>Ấn bắt đầu rồi né hết bãi shit</h2>
-          </div>
-          <button id="backToSetupButton" class="ghost-button tap-target" type="button">
-            Quay lại setup
-          </button>
-        </div>
-
-        <div class="hud">
-          <div class="hud-chip">
-            <span>Điểm</span>
-            <strong id="scoreValue">0</strong>
-          </div>
-          <div class="hud-chip">
-            <span>Mục tiêu</span>
-            <strong id="goalValue">8</strong>
-          </div>
-          <div class="hud-chip status-chip">
-            <span>Trạng thái</span>
-            <strong id="statusText">Sẵn sàng</strong>
-          </div>
-        </div>
-
-        <div class="summary-row">
-          <div class="summary-chip">
-            <span>Ảnh mặt</span>
-            <strong id="faceSummary">Đã có ảnh mặc định</strong>
-          </div>
-          <div class="summary-chip">
-            <span>Video</span>
-            <strong id="videoSummary">Chưa có video</strong>
-          </div>
-        </div>
-
-        <div class="game-card">
+        <div class="game-card solo-game-card">
           <div class="game-frame tap-target">
+            <div class="game-float-bar">
+              <button id="backToSetupButton" class="ghost-button floating-back tap-target" type="button">
+                Quay lại
+              </button>
+              <div class="score-pill">
+                <span id="scoreValue">0</span>
+                <span class="score-divider">/</span>
+                <span id="goalValue">8</span>
+              </div>
+            </div>
+
             <canvas
               id="gameCanvas"
               width="420"
@@ -154,12 +137,15 @@
 
           <div class="touch-hints">
             <button id="flapButton" class="fab-button tap-target" type="button">Bay</button>
-            <p>Chạm nhanh trong khung game hoặc nút Bay để flap. Đã chặn bớt double-tap zoom trên mobile.</p>
           </div>
         </div>
       </div>
     </section>
   </main>
+
+  <span id="statusText" class="sr-only">Sẵn sàng</span>
+  <span id="faceSummary" class="sr-only">Đang dùng mặt mặc định</span>
+  <span id="videoSummary" class="sr-only">Chưa có video</span>
 
   <script src="./script.js"></script>
 </body>
