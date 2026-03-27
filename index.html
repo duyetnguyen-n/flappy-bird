@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="description"
+    content="Flappy Bird mobile-first cho web, có chèn ảnh mặt vào chim, âm thanh khi vượt ống và hiện video khi về đích."
+  />
+  <title>Flappy Bird Face Party</title>
+  <link rel="preconnect" href="https://interactive-examples.mdn.mozilla.net" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero-card">
+      <div class="hero-copy">
+        <p class="eyebrow">Mobile first mini game</p>
+        <h1>Flappy Bird mặt bạn</h1>
+        <p class="hero-text">
+          Tải ảnh khuôn mặt lên, chạm để bay qua ống và cán mốc để mở video ăn mừng.
+        </p>
+      </div>
+
+      <div class="controls-panel">
+        <label class="upload-control" for="faceUpload">
+          <span>Chèn ảnh mặt vào chim</span>
+          <input id="faceUpload" type="file" accept="image/*" capture="user" />
+        </label>
+
+        <label class="upload-control" for="videoUpload">
+          <span>Chọn video khi về đích</span>
+          <input id="videoUpload" type="file" accept="video/*" />
+        </label>
+
+        <div class="target-control">
+          <label for="goalScore">Điểm về đích</label>
+          <input id="goalScore" type="range" min="3" max="20" step="1" value="8" />
+          <strong id="goalScoreValue">8</strong>
+        </div>
+
+        <div class="button-row">
+          <button id="startButton" class="primary-button" type="button">Bắt đầu</button>
+          <button id="restartButton" class="ghost-button" type="button">Chơi lại</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-card">
+      <div class="hud">
+        <div class="hud-chip">
+          <span>Điểm</span>
+          <strong id="scoreValue">0</strong>
+        </div>
+        <div class="hud-chip">
+          <span>Mục tiêu</span>
+          <strong id="goalValue">8</strong>
+        </div>
+        <div class="hud-chip status-chip">
+          <span>Trạng thái</span>
+          <strong id="statusText">Sẵn sàng</strong>
+        </div>
+      </div>
+
+      <div class="game-frame">
+        <canvas
+          id="gameCanvas"
+          width="420"
+          height="740"
+          aria-label="Flappy Bird game area"
+        ></canvas>
+
+        <div id="gameOverlay" class="game-overlay">
+          <div class="overlay-card">
+            <p class="overlay-kicker">Chạm màn hình để chơi</p>
+            <h2 id="gameOverlayTitle">Flappy Bird đã sẵn sàng</h2>
+            <p id="gameOverlayBody">
+              Chạm vào vùng game hoặc nút Bay để giữ chim trên không. Khi đủ điểm, video sẽ hiện ra.
+            </p>
+          </div>
+        </div>
+
+        <div id="finishOverlay" class="finish-overlay hidden">
+          <div class="finish-card">
+            <p class="overlay-kicker">Ve dich thanh cong</p>
+            <h2>Chuc mung, ban da qua cua!</h2>
+            <p id="finishMessage">Ban vua dat muc tieu.</p>
+            <video
+              id="finishVideo"
+              class="finish-video"
+              controls
+              playsinline
+              preload="metadata"
+              poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23141926'/%3E%3Ctext x='50%25' y='50%25' fill='%23f4d35e' font-size='32' dominant-baseline='middle' text-anchor='middle'%3EChuc mung!%3C/text%3E%3C/svg%3E"
+            >
+              <source
+                src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+                type="video/mp4"
+              />
+              Trinh duyet cua ban khong ho tro video HTML5.
+            </video>
+            <div class="button-row finish-actions">
+              <button id="playAgainButton" class="primary-button" type="button">Choi tiep</button>
+              <button id="closeVideoButton" class="ghost-button" type="button">Dong video</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="touch-hints">
+        <button id="flapButton" class="fab-button" type="button">Bay</button>
+        <p>Meo: cham vao vung game o bat ky dau de flap.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="./script.js"></script>
+</body>
+</html>
